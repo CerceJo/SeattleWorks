@@ -1,84 +1,95 @@
-function handleFiles(files) {
+function handleFiles(files, isTeam) {
 	// Check for the various File API support.
 	if (window.FileReader) {
 		// FileReader are supported.
-		getAsText(files[0]);
+		getAsText(files[0], isTeam);
 	} else {
 		alert('FileReader are not supported in this browser.');
 	}
 }
 
-function getAsText(fileToRead) {
+function getAsText(fileToRead, isTeam) {
 	var reader = new FileReader();
 	// Handle errors load
-	reader.onload = loadHandler;
+	reader.onload = (isTeam) ? teamLoadHandler : projectLoadHandler;
 	reader.onerror = errorHandler;
 	// Read file into memory as UTF-8      
 	reader.readAsText(fileToRead);
 }
 
-function loadHandler(event) {
+function teamLoadHandler(event) {
+    console.log("teamLoadHandler running");
 	var csv = event.target.result;
-	processDataAsObj(csv);             
+	processTeamDataAsObj(csv);             
 }
 
-//if your csv file contains the column names as the first line
-function processDataAsObj(csv){
+function projectLoadHandler(event) {
+    console.log("projectLoadHandler running");
+	var csv = event.target.result;
+	processProjectDataAsObj(csv);             
+}
+
+function processProjectDataAsObj(csv){
     var allTextLines = csv.split(/\r\n|\n/);
-    var lines = [];
-	
-    //first line of csv
-    var keys = allTextLines.shift().split(',');
-	
+	allTextLines.shift();
+    
     while (allTextLines.length) {
         var arr = allTextLines.shift().split(',');
-        var obj = {};
-        for(var i = 0; i < keys.length; i++){
-		console.log(keys[i]);
-		switch (keys[i]) {
-			case 'blackberriesAllowed':
-				obj[keys[i]] = (arr[i].toLowerCase() == 'true');
-				break;
-			default:
-				obj[keys[i]] = arr[i];
-		}
-	}
-        lines.push(obj);
+        createProject(arr[0], arr[1], arr[2].toLowerCase() == 'true');
     }
-        console.log(lines);
-	drawOutputAsObj(lines);
+	drawOutputAsObj();
+}
+
+function processTeamDataAsObj(csv){
+    var allTextLines = csv.split(/\r\n|\n/);
+    allTextLines.shift();
+    
+    while (allTextLines.length) {
+        var arr = allTextLines.shift().split(',');
+        createTeam(arr[0], arr[1], arr[2].toLowerCase() == 'true', arr.slice(3));
+    }
+	drawOutputAsObj();
 }
 
 function errorHandler(evt) {
 	if(evt.target.error.name == "NotReadableError") {
-		alert("Canno't read file !");
+		alert("Cannot read file !");
 	}
 }
 
 //draw the table, if first line contains heading
-function drawOutputAsObj(lines){
+function drawOutputAsObj(){
 	//Clear previous data
 	document.getElementById("output").innerHTML = "";
-	var table = document.createElement("table");
-	
-	//for the table headings
-	var tableHeader = table.insertRow(-1);
- 	Object.keys(lines[0]).forEach(function(key){
- 		var el = document.createElement("TH");
-		el.innerHTML = key;		
-		tableHeader.appendChild(el);
-	});	
-	
-	//the data
-	for (var i = 0; i < lines.length; i++) {
-		var row = table.insertRow(-1);
-		Object.keys(lines[0]).forEach(function(key){
-			var data = row.insertCell(-1);
-			data.appendChild(document.createTextNode(lines[i][key]));
-		});
+    var row = document.createElement("div");
+    
+	//the data for Teams
+    document.getElementById("output").appendChild(row);
+    row.innerHTML = "Teams:";
+    for (var i = 0; i < allTeams.length; i++) {
+        row = document.createElement("div");
+        document.getElementById("output").appendChild(row);
+        row.innerHTML = printTeam(allTeams[i]);
 	}
-	document.getElementById("output").appendChild(table);
+    
+    //the data for Unclaimed Projects
+    row = document.createElement("div");
+    document.getElementById("output").appendChild(row);
+    row.innerHTML = "Unclaimed Projects:";
+    unclaimedProjects.forEach(logProjectElements);
 }
+
+function logProjectElements(value, key, map) {
+    var row = document.createElement("div");
+    document.getElementById("output").appendChild(row);
+    var projectsList = '';
+    
+    for (var i=0; i<value.length; i++) {
+        projectsList += value[i].projectName + ' ';
+    }   
+    row.innerHTML = 'Date: ' + key + ', Projects: ' + projectsList;
+}
+
 var allTeams = [];
 
 /*
@@ -88,13 +99,28 @@ string teamCaptain
 boolean blackberriesAllowed
 Map[] projects
 */
-function createTeam(inputTeamName, inputTeamCaptain, inputBlackberriesAllowed) {
-	allTeams.push({teamName: inputTeamName, 
-				     teamCaptain: inputTeamCaptain, 
-				     blackberriesAllowed: inputBlackberriesAllowed,
-				     projects:[]});
+function createTeam(inputTeamName, inputTeamCaptain, inputBlackberriesAllowed, inputPreferredProjectNames) {
+	allTeams.push({
+        teamName: inputTeamName, 
+        teamCaptain: inputTeamCaptain, 
+        blackberriesAllowed: inputBlackberriesAllowed,
+        preferredProjects: inputPreferredProjectNames,
+        preferredProjectUsed: false;
+        projects:[]
+    });
 }
 
+function printTeam(team) {
+   return 'teamName: ' + team.teamName + 
+                ', teamCaptain: ' + team.teamCaptain + 
+                ', blackberries? ' + team.blackberriesAllowed +
+                ', preferred projects: ' + team.preferredProjects;
+}
+
+function printProject(project) {
+    return 'projectName: ' + project.projectName 
+        + ' blackberries? ' + project.hasBlackberries;
+}
 // mapOfArrays unclaimedProjects
 // Represents projects for each date
 var unclaimedProjects = new Map();
@@ -112,4 +138,23 @@ function createProject(inputDateString, inputProjectName, inputHasBlackberries) 
 	projectArrayForDate.push({projectName: inputProjectName, 
 				     hasBlackberries: inputHasBlackberries});
 	unclaimedProjects.set(inputDateString, projectArrayForDate);
+}
+
+function matchTeams(){
+    unclaimedProjects.forEach(matchTeamsForDate);
+}
+
+function matchTeamsForDate(projectArray, dateValue, unclaimedProjectsMap){
+    if(projectArray.length != allTeams.length){
+        alert("Date: '" + dateValue.toString() + "' does not have the same number of projects as you have teams");
+    } else {
+        console.log("Matching projects for: '" + dateValue + "'.");
+        
+        //shuffle the allTeams array for fairness
+        allTeams.sort(() => Math.random() - 0.5);
+        
+        for (var team in allTeams){
+            //TODO: match team to project
+        }
+    }
 }

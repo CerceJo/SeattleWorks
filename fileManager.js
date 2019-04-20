@@ -13,8 +13,21 @@ function getAsText(filesToRead) {
 }
 
 function loadHandler(event) {
-  alert("File Loaded");
+	alert ("started loadHandler");
+	var csv = event.target.result;
+	processData(csv);             
 }
+
+function processData(csv) {
+    var allTextLines = csv.split(/\r\n|\n/);
+    var lines = [];
+    while (allTextLines.length) {
+        lines.push(allTextLines.shift().split(','));
+    }
+	console.log(lines);
+	//drawOutput(lines);
+}
+
  function errorHandler (event){
    alert("Oh no!"); // TODO: Error Handling
  }

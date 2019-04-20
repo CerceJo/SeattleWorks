@@ -1,11 +1,20 @@
-var reader = new FileReader();
-reader.onload = loadhandler;
-
 function handleFormSubmit() {
-  fileToRead = document.getElementById("file").files[0];
-  reader.readAsText(fileToRead);
+  filesToRead = document.getElementById("file").files;
+  getAsText(filesToRead);
 }
 
-function loadhandler(event) {
+function getAsText(filesToRead) {
+	var reader = new FileReader();
+	// Handle errors load
+	reader.onload = loadHandler;
+	reader.onerror = errorHandler;
+	// Read file into memory as UTF-8      
+	reader.readAsText(filesToRead[0]); //TODO: handle empty array
+}
+
+function loadHandler(event) {
   alert("File Loaded");
 }
+ function errorHandler (event){
+   alert("Oh no!"); // TODO: Error Handling
+ }

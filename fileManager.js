@@ -1,5 +1,5 @@
 var reader = new FileReader();
-reader.onload = loadhandler();
+reader.onload = loadhandler;
 
 function handleFormSubmit() {
   fileToRead = document.getElementById("file").files[0];

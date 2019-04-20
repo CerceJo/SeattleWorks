@@ -34,7 +34,13 @@ function processDataAsObj(csv){
         var arr = allTextLines.shift().split(',');
         var obj = {};
         for(var i = 0; i < keys.length; i++){
-            obj[keys[i]] = arr[i];
+		switch (keys[i]) {
+			case 'blackberriesAllowed':
+				obj[keys[i]] = (arr[i].toLowerCase() == 'true');
+				break;
+			default:
+				obj[keys[i]] = arr[i];
+		}
 	}
         lines.push(obj);
     }

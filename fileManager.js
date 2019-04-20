@@ -96,3 +96,4 @@ function drawOutputAsObj(lines){
 	}
 	document.getElementById("output").appendChild(table);
 }
+

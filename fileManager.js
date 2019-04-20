@@ -72,4 +72,37 @@ function drawOutputAsObj(lines){
 	}
 	document.getElementById("output").appendChild(table);
 }
+var allTeams = [];
 
+/*
+Team Object
+string teamName
+string teamCaptain
+boolean blackberriesAllowed
+Map[] projects
+*/
+function createTeam(inputTeamName, inputTeamCaptain, inputBlackberriesAllowed) {
+	allTeams.push({teamName: inputTeamName, 
+				     teamCaptain: inputTeamCaptain, 
+				     blackberriesAllowed: inputBlackberriesAllowed,
+				     projects:[]});
+}
+
+// mapOfArrays unclaimedProjects
+// Represents projects for each date
+var unclaimedProjects = new Map();
+
+/*
+Project Object
+String projectName
+boolean hasBlackberries
+*/
+function createProject(inputDateString, inputProjectName, inputHasBlackberries) {
+	var projectArrayForDate = unclaimedProjects.get(inputDateString);
+	if (!projectArrayForDate) {
+		projectArrayForDate = new Array();
+	}
+	projectArrayForDate.push({projectName: inputProjectName, 
+				     hasBlackberries: inputHasBlackberries});
+	unclaimedProjects.set(inputDateString, projectArrayForDate);
+}

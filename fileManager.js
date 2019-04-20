@@ -34,6 +34,7 @@ function processDataAsObj(csv){
         var arr = allTextLines.shift().split(',');
         var obj = {};
         for(var i = 0; i < keys.length; i++){
+		console.log(keys[i]);
 		switch (keys[i]) {
 			case 'blackberriesAllowed':
 				obj[keys[i]] = (arr[i].toLowerCase() == 'true');

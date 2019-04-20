@@ -13,13 +13,19 @@
         </h3>
       </legend>
       <fieldset>
-          <label for="csvFileInput"> <strong>CSV File:</strong>
-          </label>
-          <input type="file" id="csvFileInput" onchange="handleFiles(this.files)"
-          accept=".csv">
-        </div>
+          <label for="teamFileInput"> <strong>Teams:</strong></label>
+          <input type="file" id="teamFileInput" onchange="handleFiles(this.files, true)"
+                 accept=".csv"/>
+      </fieldset>
+        <br>
+      <fieldset>
+          <label for="projectFileInput"> <strong>Projects:</strong></label>
+          <input type="file" id="projectFileInput"
+                 onchange="handleFiles(this.files, false)"
+                 accept=".csv"/>
       </fieldset>
     </form>
+      <button onclick="matchTeams()">Match!</button>
     <div id="output">
     </div>
   </div>
